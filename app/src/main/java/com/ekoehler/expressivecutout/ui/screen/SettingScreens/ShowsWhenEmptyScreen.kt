@@ -122,6 +122,16 @@ internal fun ShowsWhenEmptyScreen(
     ) {
         PageTitle(text = stringResource(R.string.behaviour_empty_pill))
 
+        // The master switch also lives on the Behaviour card that opens this page; repeated here so
+        // the page can turn the resting pill on without going back.
+        SettingsToggleCard(
+            shape = RoundedCornerShape(32.dp),
+            title = stringResource(R.string.behaviour_empty_pill),
+            description = stringResource(R.string.behaviour_empty_pill_desc),
+            checked = behaviour.showsWhenEmpty,
+            onCheckedChange = viewModel::setShowsWhenEmpty,
+        )
+
         SettingsToggleCard(
             shape = RoundedCornerShape(32.dp),
             title = stringResource(R.string.shows_when_empty_show_icon),

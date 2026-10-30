@@ -65,7 +65,7 @@ data class AppearanceSettings(
     val dismissCornerBottomRightDp: Int? = null,
 ) {
     companion object {
-        const val DEFAULT_SHADOW_ENABLED = true
+        const val DEFAULT_SHADOW_ENABLED = false
         const val DEFAULT_STROKE_ENABLED = false
         const val DEFAULT_STROKE_WIDTH_DP = 2
         const val MIN_STROKE_WIDTH_DP = 1
@@ -77,8 +77,8 @@ data class AppearanceSettings(
         const val DEFAULT_PREFER_DYNAMIC_ICON_COLOR = false
         val DEFAULT_NOTIFICATION_COLOR_MODE = NotificationColorMode.MATERIAL
 
-        /** Match the pill's historical look: near-black fill, white stroke. */
-        val DEFAULT_BACKGROUND_FILL: CutoutFill = CutoutFill.Solid(ColorSpec.Fixed(0xFF0A0A0A))
+        /** True OLED black so the resting pill reads as part of the camera hole. */
+        val DEFAULT_BACKGROUND_FILL: CutoutFill = CutoutFill.Solid(ColorSpec.Fixed(0xFF000000))
         val DEFAULT_STROKE_COLOR: CutoutColor = CutoutColor.Solid(0xFFFFFFFF)
         /** null means automatic high-contrast text color based on background luminance. */
         val DEFAULT_TEXT_COLOR: CutoutColor? = null

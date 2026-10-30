@@ -166,7 +166,7 @@ data class BehaviourSettings(
         const val MAX_NORMAL_SECONDS = 10
         const val MIN_COLLAPSE_SECONDS = 1
         const val MAX_COLLAPSE_SECONDS = 15
-        const val SHOWS_WHEN_EMPTY = false
+        const val SHOWS_WHEN_EMPTY = true
         const val SHOWS_WHEN_EMPTY_SHOW_ICON = false
         val DEFAULT_EMPTY_CLICK_ACTION = EmptyClickAction.NONE
         const val DEFAULT_SHOW_STATUS_DOT = true

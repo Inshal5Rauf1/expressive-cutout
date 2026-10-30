@@ -54,7 +54,7 @@ import com.ekoehler.expressivecutout.ui.screen.dynamicDescription
  * blue, red and green. Any screen can override the set by passing its own list to [ColorPickerCard].
  */
 val DEFAULT_PRESET_COLORS: List<Long> = listOf(
-    0xFF0A0A0A, // black
+    0xFF000000, // black (true OLED black, matches the camera hole)
     0xFFFFFFFF, // white
     0xFF444444, // dark grey
     0xFFBBBBBB, // light grey
