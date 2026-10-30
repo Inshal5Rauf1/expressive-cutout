@@ -1,5 +1,18 @@
 [
   {
+    "version": "0.3.2-beta (hardened fork)",
+    "description": "GrapheneOS-hardened fork by Inshal Rauf",
+    "features": [
+      "Accessibility service can no longer read window content: it learns foreground package names only",
+      "READ_PHONE_STATE removed from the manifest; app backup disabled; the app still declares no INTERNET permission",
+      "True OLED black: the black preset is now #000000 and new installs default to a black, shadow-free resting pill"
+    ],
+    "bugfixes": [
+      "The Shows-when-empty page now carries its own on/off switch",
+      "Assistant screen-reading tile removed along with the permission it needed"
+    ]
+  },
+  {
     "version": "0.3.2-beta",
     "description": "Notch and 0.3.1 fixes",
     "features": [

@@ -4,14 +4,11 @@ import android.app.Activity
 import android.content.Intent
 import androidx.core.net.toUri
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,7 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.Coffee
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Language
@@ -56,7 +52,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -164,8 +159,6 @@ private fun ProfileList(
 
         val githubProjectUrl = stringResource(R.string.profile_github_project_url)
         val githubProfileUrl = stringResource(R.string.profile_github_url)
-        val coffeeUrl = stringResource(R.string.profile_coffee_url)
-        val linkedInUrl = stringResource(R.string.profile_linkedin_url)
 
         VersionCard(versionName = versionName, shape = cardShape(first = true), onClick = {
             haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -210,8 +203,6 @@ private fun ProfileList(
         DevCard(
             shape = cardShape(last = true),
             onOpenGitHub = { openUrl(githubProfileUrl) },
-            onOpenCoffee = { openUrl(coffeeUrl) },
-            onOpenLinkedIn = { openUrl(linkedInUrl) },
         )
     }
 }
@@ -271,16 +262,13 @@ private fun AppHeader() {
 }
 
 /**
- * The "about" card that closes the tab: the developer's photo and the two links out as filled
- * buttons. Name, version and tagline live in [AppHeader] instead.
+ * The "about" card that closes the tab: who maintains this fork, where it came from, and one link
+ * out to the maintainer's GitHub. Name, version and tagline live in [AppHeader] instead.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DevCard(
     shape: Shape,
     onOpenGitHub: () -> Unit,
-    onOpenCoffee: () -> Unit,
-    onOpenLinkedIn: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -293,63 +281,30 @@ private fun DevCard(
                 .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            DevAvatar()
-
             Text(
                 text = stringResource(R.string.dev_card_author),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 20.dp),
+            )
+            Text(
+                text = stringResource(R.string.dev_card_based_on),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
             )
 
-            // Wraps to a second line on narrow screens rather than squeezing either label.
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Button(onClick = onOpenGitHub) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_github),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.dev_card_github))
-                }
-                Button(onClick = onOpenCoffee) {
-                    Icon(
-                        imageVector = Icons.Rounded.Coffee,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.profile_coffee_title))
-                }
-                Button(onClick = onOpenLinkedIn) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_linkedin),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.dev_card_linkedin))
-                }
+            Button(onClick = onOpenGitHub) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_github),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.dev_card_github))
             }
         }
     }
-}
-
-/** The developer's photo, cropped square with the same corner radius as the cards. */
-@Composable
-private fun DevAvatar() {
-    Image(
-        painter = painterResource(R.drawable.dev_avatar),
-        contentDescription = stringResource(R.string.dev_card_avatar),
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .size(112.dp)
-            .clip(RoundedCornerShape(28.dp)),
-    )
 }
 
 /** The app-wide theme choice: a title over the segmented selector, in a card of its own. */

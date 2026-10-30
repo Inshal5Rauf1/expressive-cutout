@@ -3,8 +3,10 @@
 Instructions for AI coding agents working in this repository. Human contributors should read
 [CONTRIBUTING.md](CONTRIBUTING.md) — this file is the same rules, written to be followed.
 
-This project openly uses AI agents as helpers. That is exactly why these rules are strict:
-the maintainer is new to Kotlin, so code that is hard to read is code that can't be reviewed.
+This fork openly uses AI agents as helpers. That is exactly why these rules are strict: the
+point of the fork is that every change can be audited, so code that is hard to read is code
+that can't be reviewed. Never add network code, analytics, or a permission the README does
+not list; the CI hardening guard will refuse it anyway.
 
 ## The project
 
