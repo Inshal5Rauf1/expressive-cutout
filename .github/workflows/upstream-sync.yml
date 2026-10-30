@@ -1,0 +1,106 @@
+name: Upstream sync
+
+on:
+  schedule:
+    - cron: "17 3 * * *"   # 03:17 UTC daily, 08:17 PKT
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  UPSTREAM: https://github.com/EvanKoe/expressive-cutout.git
+  UPSTREAM_BRANCH: dev
+  HARDENED_BRANCH: ${{ vars.HARDENED_BRANCH || 'hardened' }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.HARDENED_BRANCH }}
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        id: up
+        run: |
+          git remote add upstream "$UPSTREAM"
+          git fetch upstream "$UPSTREAM_BRANCH"
+          echo "sha=$(git rev-parse upstream/$UPSTREAM_BRANCH)" >> "$GITHUB_OUTPUT"
+          if git merge-base --is-ancestor "upstream/$UPSTREAM_BRANCH" HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Nothing new
+        if: steps.up.outputs.changed == 'false'
+        run: echo "Hardened branch already contains upstream/$UPSTREAM_BRANCH"
+
+      - name: Try merge
+        if: steps.up.outputs.changed == 'true'
+        id: merge
+        run: |
+          git config user.name "upstream-sync[bot]"
+          git config user.email "upstream-sync@users.noreply.github.com"
+          BR="sync/upstream-$(date -u +%Y%m%d)-${GITHUB_RUN_NUMBER}"
+          echo "branch=$BR" >> "$GITHUB_OUTPUT"
+          git checkout -b "$BR"
+          if git merge --no-edit "upstream/$UPSTREAM_BRANCH"; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+            git merge --abort
+          fi
+
+      - name: Hardening guard
+        if: steps.merge.outputs.clean == 'true'
+        run: |
+          M=app/src/main/AndroidManifest.xml
+          A=app/src/main/res/xml/accessibility_service_config.xml
+          fail=0
+          grep -q 'android.permission.INTERNET' "$M" && { echo "::error::INTERNET permission appeared"; fail=1; }
+          grep -q 'READ_PHONE_STATE' "$M" && { echo "::error::READ_PHONE_STATE is back"; fail=1; }
+          grep -q 'allowBackup="true"' "$M" && { echo "::error::allowBackup is true again"; fail=1; }
+          grep -q 'canRetrieveWindowContent="true"' "$A" && { echo "::error::window content read is back"; fail=1; }
+          grep -q 'typeWindowContentChanged' "$A" && { echo "::error::content-changed events are back"; fail=1; }
+          grep -rqE 'okhttp|retrofit|firebase|crashlytics|analytics' gradle/libs.versions.toml app/build.gradle.kts && { echo "::error::new network/analytics dependency"; fail=1; }
+          exit $fail
+
+      - uses: actions/setup-java@v4
+        if: steps.merge.outputs.clean == 'true'
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.merge.outputs.clean == 'true'
+
+      - name: Build (proves the patches still compile)
+        if: steps.merge.outputs.clean == 'true'
+        run: ./gradlew assembleDebug testDebugUnitTest --no-daemon
+
+      - name: Push sync branch and open PR
+        if: steps.merge.outputs.clean == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push origin "${{ steps.merge.outputs.branch }}"
+          LOG=$(git log --oneline "HEAD~1..upstream/$UPSTREAM_BRANCH" | head -40)
+          gh pr create \
+            --base "$HARDENED_BRANCH" \
+            --head "${{ steps.merge.outputs.branch }}" \
+            --title "Upstream sync: ${{ steps.up.outputs.sha }}" \
+            --body "$(printf 'Upstream dev moved. Merge built and passed the hardening guard.\n\nReview the diff, then build, sign and install locally.\n\nUpstream commits:\n\n%s\n' "$LOG")"
+
+      - name: Open issue on conflict
+        if: steps.merge.outputs.clean == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Upstream sync conflict: ${{ steps.up.outputs.sha }}" \
+            --body "Merging upstream/$UPSTREAM_BRANCH into $HARDENED_BRANCH conflicts. Resolve locally."
