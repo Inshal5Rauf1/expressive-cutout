@@ -90,13 +90,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git push origin "${{ steps.merge.outputs.branch }}"
+          BR="${{ steps.merge.outputs.branch }}"
+          git push origin "$BR"
           LOG=$(git log --oneline "HEAD~1..upstream/$UPSTREAM_BRANCH" | head -40)
-          gh pr create \
-            --base "$HARDENED_BRANCH" \
-            --head "${{ steps.merge.outputs.branch }}" \
-            --title "Upstream sync: ${{ steps.up.outputs.sha }}" \
-            --body "$(printf 'Upstream dev moved. Merge built and passed the hardening guard.\n\nReview the diff, then build, sign and install locally.\n\nUpstream commits:\n\n%s\n' "$LOG")"
+          BODY=$(printf 'Upstream dev moved. The merge built and passed the hardening guard.\n\nReview the diff, then build, sign and install locally.\n\nUpstream commits:\n\n%s\n' "$LOG")
+          # The default Actions token is sometimes refused on createPullRequest even with
+          # "Allow GitHub Actions to create and approve pull requests" on. Try the PR; if it is
+          # refused, open an issue instead so the email still goes out and the branch is linked.
+          if ! gh pr create --base "$HARDENED_BRANCH" --head "$BR" \
+               --title "Upstream sync: ${{ steps.up.outputs.sha }}" --body "$BODY"; then
+            COMPARE="${{ github.server_url }}/${{ github.repository }}/compare/$HARDENED_BRANCH...$BR"
+            gh issue create \
+              --title "Upstream sync ready: $BR" \
+              --body "$(printf '%s\n\nPull request creation was refused for the Actions token, so the merged branch is waiting here instead:\n%s\n\nOpen the PR from that link, or merge the branch locally.\n' "$BODY" "$COMPARE")"
+          fi
 
       - name: Open issue on conflict
         if: steps.merge.outputs.clean == 'false'
